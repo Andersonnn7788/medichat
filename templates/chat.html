@@ -6,6 +6,7 @@
 <title>MediChat – Chat Interface</title>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 <style>
   :root{
     --bg: #0b0c10;
@@ -210,15 +211,27 @@
 
   /* Composer card */
   .composer{
-    max-width:900px; margin: 20px auto 0; border-radius:20px;
+    max-width:1000px; margin: 10px auto 10px; border-radius:20px;
     background: var(--card);
     box-shadow: var(--shadow-lg);
     backdrop-filter: blur(var(--blur));
     border:1px solid rgba(255,255,255,.7);
     overflow:hidden;
-    position: sticky;
-    bottom: 20px;
+    position: static;
+    /* Ensure same width as sticky state */
+    width: min(1000px, calc(100% - 40px));
   }
+  
+  :root { --chat-offset: 95px; }
+  
+  .composer.sticky{
+  position: fixed;
+  left: 50%;
+  transform: translateX(calc(-50% + var(--chat-offset)));
+  bottom: 20px;
+  width: min(1000px, calc(100% - 40px));
+  z-index: 100;
+}
   .composer .row{
     padding:18px 18px 8px; display:flex; gap:10px; align-items:flex-start;
   }
@@ -257,6 +270,51 @@
   .send{ margin-left:8px; color:#fff; background: linear-gradient(135deg,var(--brand),var(--brand-2)); border:0}
   .send:active{ transform: translateY(1px) }
   .send:disabled{ opacity: 0.6; cursor: not-allowed; transform: none; }
+
+  /* New chat input UI styles */
+  .chat-container {
+    display: flex;
+    align-items: center;
+    border: 1px solid var(--divider);
+    border-radius: 36px;
+    padding: 14px 16px;
+    width: 100%;
+    background: #fff;
+    box-shadow: var(--shadow-sm);
+  }
+
+  .chat-icon {
+    font-size: 18px;
+    color: #555;
+    margin: 0 10px;
+    cursor: pointer;
+  }
+
+  .chat-input {
+    flex: 1;
+    border: none;
+    outline: none;
+    font-size: 18px;
+    padding: 12px;
+    background: transparent;
+    color: #1a2233;
+  }
+
+  .chat-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f2f2f2;
+    border-radius: 50%;
+    width: 48px;
+    height: 48px;
+    margin-left: 8px;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+
+  .chat-button:hover { background: #e0e0e0; }
+  .chat-button i { font-size: 18px; color: #333; }
 
   /* Loading indicator */
   .loading-message {
@@ -389,28 +447,25 @@
           <h2>Good Morning, Anderson.<br>How Can I <span>Assist You Today?</span></h2>
         </section>
 
+        <!-- Composer moved close to greeting -->
+        <section class="composer" aria-label="Composer" id="composerBar">
+          <div class="chat-container">
+            <i class="fa-solid fa-plus chat-icon"></i>
+            <input type="text" id="messageInput" class="chat-input" placeholder="Ask anything">
+            <div class="chat-button">
+              <i class="fa-solid fa-microphone"></i>
+            </div>
+            <div class="chat-button" title="Upload">
+              <i class="fa-solid fa-arrow-up"></i>
+            </div>
+          </div>
+        </section>
+
         <!-- Messages container -->
         <div class="messages-container" id="messagesContainer">
           <!-- Messages will be added here dynamically -->
         </div>
       </div>
-
-      <!-- Composer -->
-      <section class="composer" aria-label="Composer">
-        <div class="row">
-          <div class="spark">✦</div>
-          <textarea id="messageInput" placeholder="Initiate a query or send a command to the AI…" aria-label="Message input"></textarea>
-        </div>
-        <div class="chips" role="list">
-          <span class="chip brand" onclick="insertPrompt('Explain the reasoning behind ')"><span class="dot"></span>Reasoning</span>
-          <span class="chip" onclick="insertPrompt('Create an image of ')"><span class="dot"></span>Create Image</span>
-          <span class="chip green" onclick="insertPrompt('Do deep research on ')"><span class="dot"></span>Deep Research</span>
-        </div>
-        <div class="actions">
-          <button class="mic" type="button">🎙️ Voice</button>
-          <button class="send" type="button" id="sendButton">Send ➤</button>
-        </div>
-      </section>
     </main>
   </div>
 
@@ -420,10 +475,13 @@
     function addMessage(text, isUser = false, isLoading = false) {
       const messagesContainer = document.getElementById('messagesContainer');
       const heroSection = document.getElementById('heroSection');
+      const composerBar = document.getElementById('composerBar');
       
       // Hide hero section when first message is added
       if (messageCount === 0) {
         heroSection.style.display = 'none';
+        // Stick composer to bottom when chat starts
+        composerBar.classList.add('sticky');
       }
       
       const messageDiv = document.createElement('div');
@@ -431,7 +489,7 @@
       
       const avatar = document.createElement('div');
       avatar.className = 'message-avatar';
-      avatar.textContent = isUser ? 'U' : 'B';
+      avatar.textContent = isUser ? 'A' : 'M';
       
       const content = document.createElement('div');
       content.className = 'message-content';
@@ -470,9 +528,9 @@
       const text = messageInput.value.trim();
       if (!text) return;
 
-      // Disable input and button
+      // Disable input and button (guard for missing button)
       messageInput.disabled = true;
-      sendButton.disabled = true;
+      if (sendButton) sendButton.disabled = true;
 
       // Add user message to chat
       addMessage(text, true);
@@ -482,7 +540,7 @@
       const loadingMessage = addMessage('', false, true);
 
       // Determine which endpoint to use based on toggle
-      const endpoint = knowledgeBaseToggle.checked ? '/bedrock/invoke' : '/bedrock/query';
+      const endpoint = (knowledgeBaseToggle && knowledgeBaseToggle.checked) ? '/bedrock/invoke' : '/bedrock/query';
 
       try {
         const response = await fetch(`${endpoint}?text=${encodeURIComponent(text)}`);
@@ -498,7 +556,7 @@
       } finally {
         // Re-enable input and button
         messageInput.disabled = false;
-        sendButton.disabled = false;
+        if (sendButton) sendButton.disabled = false;
         messageInput.focus();
       }
     }
@@ -506,10 +564,13 @@
     function clearChat() {
       const messagesContainer = document.getElementById('messagesContainer');
       const heroSection = document.getElementById('heroSection');
+      const composerBar = document.getElementById('composerBar');
       
       messagesContainer.innerHTML = '';
       heroSection.style.display = 'block';
       messageCount = 0;
+      // Return composer to normal position
+      composerBar.classList.remove('sticky');
     }
 
     function insertPrompt(prompt) {
@@ -519,7 +580,9 @@
     }
 
     // Event listeners
-    document.getElementById('sendButton').addEventListener('click', sendMessage);
+    if (document.getElementById('sendButton')) {
+      document.getElementById('sendButton').addEventListener('click', sendMessage);
+    }
     document.getElementById('messageInput').addEventListener('keypress', (e) => {
       if (e.key === 'Enter' && !e.shiftKey) {
         e.preventDefault();
@@ -527,12 +590,14 @@
       }
     });
 
-    // Auto-resize textarea
+    // Auto-resize only if element is a textarea (legacy support)
     const textarea = document.getElementById('messageInput');
-    textarea.addEventListener('input', function() {
-      this.style.height = 'auto';
-      this.style.height = Math.min(this.scrollHeight, 200) + 'px';
-    });
+    if (textarea && textarea.tagName === 'TEXTAREA') {
+      textarea.addEventListener('input', function() {
+        this.style.height = 'auto';
+        this.style.height = Math.min(this.scrollHeight, 200) + 'px';
+      });
+    }
 
     // Focus on input when page loads
     document.addEventListener('DOMContentLoaded', function() {
