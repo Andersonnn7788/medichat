@@ -9,12 +9,15 @@
 from fastapi import FastAPI, Request, Query, HTTPException
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
+from fastapi.responses import StreamingResponse
+from pydantic import BaseModel
 import boto3
 import os
 import json
 from dotenv import load_dotenv
 import logging
 from botocore.exceptions import BotoCoreError, ClientError
+import asyncio
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -24,7 +27,7 @@ logger = logging.getLogger(__name__)
 load_dotenv()
 
 # Retrieve and validate AWS configuration from environment variables
-AWS_REGION = os.getenv("AWS_REGION", "us-east-2")
+AWS_REGION = os.getenv("AWS_REGION", "us-east-1")
 MODEL_ID = os.getenv("MODEL_ID")
 KNOWLEDGE_BASE_ID = os.getenv("KNOWLEDGE_BASE_ID")
 MODEL_ARN = os.getenv("MODEL_ARN")
@@ -32,6 +35,11 @@ MODEL_ARN = os.getenv("MODEL_ARN")
 # Validate mandatory environment variables
 if not AWS_REGION:
     raise ValueError("AWS_REGION environment variable is missing.")
+
+# Pydantic models for request/response
+class ChatMessage(BaseModel):
+    message: str
+    use_knowledge_base: bool = False
 
 app = FastAPI()
 
@@ -136,6 +144,78 @@ async def query_with_knowledge_base(text: str = Query(..., description="Input te
     except Exception as e:
         logger.error(f"Unexpected error: {e}")
         raise HTTPException(status_code=500, detail="An unexpected error occurred.")
+
+@app.post("/chat")
+async def chat_endpoint(chat_request: ChatMessage):
+    """
+    Endpoint for chat interface that handles both general queries and knowledge base queries.
+    """
+    try:
+        if chat_request.use_knowledge_base:
+            # Use knowledge base for retrieval
+            if not KNOWLEDGE_BASE_ID or not MODEL_ARN:
+                raise HTTPException(status_code=500, detail="Knowledge base configuration is missing.")
+            
+            response = bedrock_agent_client.retrieve_and_generate(
+                input={"text": chat_request.message},
+                retrieveAndGenerateConfiguration={
+                    "knowledgeBaseConfiguration": {
+                        "knowledgeBaseId": KNOWLEDGE_BASE_ID,
+                        "modelArn": MODEL_ARN
+                    },
+                    "type": "KNOWLEDGE_BASE"
+                }
+            )
+            return {"response": response["output"]["text"], "type": "knowledge_base"}
+        else:
+            # Use regular model invocation
+            if not MODEL_ID:
+                raise HTTPException(status_code=500, detail="MODEL_ID is not configured.")
+            
+            # Format the prompt according to Llama 3's requirements
+            formatted_prompt = f"""
+            <|begin_of_text|><|start_header_id|>user<|end_header_id|>
+            {chat_request.message}
+            <|eot_id|>
+            <|start_header_id|>assistant<|end_header_id|>
+            """
+
+            # Construct the request payload
+            request_payload = {
+                "prompt": formatted_prompt,
+                "max_gen_len": 512,
+                "temperature": 0.5
+            }
+
+            # Invoke the model
+            response = bedrock_client.invoke_model(
+                modelId=MODEL_ID,
+                contentType="application/json",
+                accept="application/json",
+                body=json.dumps(request_payload)
+            )
+
+            # Read and parse the response body
+            response_body = json.loads(response['body'].read().decode('utf-8'))
+
+            # Extract the generated text
+            generated_text = response_body.get("generation", "")
+
+            if not generated_text:
+                logger.error("Model did not return any content.")
+                raise HTTPException(status_code=500, detail="Model did not return any content.")
+            
+            return {"response": generated_text, "type": "general"}
+    
+    except ClientError as e:
+        logger.error(f"AWS ClientError: {e}")
+        raise HTTPException(status_code=500, detail=f"AWS Client error: {str(e)}")
+    except BotoCoreError as e:
+        logger.error(f"AWS BotoCoreError: {e}")
+        raise HTTPException(status_code=500, detail=f"AWS BotoCore error: {str(e)}")
+    except Exception as e:
+        logger.error(f"Unexpected error: {e}")
+        raise HTTPException(status_code=500, detail=f"Unexpected error: {str(e)}")
 
 if __name__ == "__main__":
     import uvicorn
