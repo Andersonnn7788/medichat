@@ -4,6 +4,10 @@ An AI-powered chatbot interface that enables healthcare professionals to query u
 
 Demo Website: http://medichat.us-east-1.elasticbeanstalk.com/
 
+📝 Project Description
+--------
+MediChat is an AI-powered intelligent medical document query tool that helps healthcare professionals instantly access critical information buried within unstructured medical PDFs. In Malaysia, doctors and hospital staff often waste valuable time manually searching archives, while traditional keyword searches miss context in abbreviations, tables, or scanned documents—leading to overlooked insights and delayed care. MediChat solves this by offering a chat-like interface where users can ask natural language questions and receive accurate, context-aware answers with trusted citations from the source documents. Built on AWS cloud-native services with a Retrieval-Augmented Generation (RAG) pipeline, the system uses Amazon S3 for storage, Bedrock Titan Embeddings for semantic search, Nova Pro for natural language responses, and a Python (FastAPI) backend deployed on Elastic Beanstalk with a lightweight HTML/CSS frontend. Key features include semantic search optimized for medical terminology, handling of scanned and legacy PDFs, and serverless scalability that keeps costs low. With future plans for voice-enabled queries, multi-language support, and EHR integration, MediChat transforms static medical documents into a living knowledge base, empowering clinicians with faster, safer, and smarter decision-making.
+
 📌 Features
 --------
 - Natural Language Search – Ask questions like “What’s the recommended dengue dosage for adults?”
