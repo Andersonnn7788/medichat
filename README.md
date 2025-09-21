@@ -47,4 +47,5 @@ Workflow:
 --------
 - Add multi-language support (Malay, Mandarin, Tamil).
 - Integrate voice-based query using Amazon Polly.
-- Expand to other domains (legal, finance, education).
+- Connect directly with hospital electronic health record (EHR) systems.
+- Federated system to allow secure collaboration across institutions.
