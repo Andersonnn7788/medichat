@@ -30,7 +30,7 @@ Workflow:
 | **Frontend**      | HTML, CSS| 
 | **Backend** | Python | 
 | **AI & Search** | Amazon Bedrock (Nova Pro, Titan Embeddings v2) | 
-| **Storage:** | Amazon S3 (PDF storage) | 
+| **Storage** | Amazon S3 (PDF storage) | 
 | **Deployment**      | AWS Elastic Beanstalk  | 
 
 🧑‍💻 Usage
