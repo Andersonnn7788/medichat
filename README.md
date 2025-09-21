@@ -23,7 +23,7 @@ Workflow:
 - Titan Embeddings v2 → semantic search over documents.
 - Nova Pro (LLM) → generates precise answers.
 4. Knowledge Base references processed documents stored in Amazon S3.
-5. Answers are displayed in the chat interface.
+5. Answers are displayed in the chat interface with source.
 
 🛠️ Tech Stack
 --------
@@ -42,7 +42,7 @@ Workflow:
 - Ask questions in the chat interface:
   - “What were the main diagnoses recorded for Mr Tan in the report?”
   - "Who owns the medical records, and who owns the personal information in them?"
-- The chatbot retrieves the relevant document sections and generates an answer.
+- The chatbot retrieves the relevant document sections and generates an answer with source.
 - Version Control: GitHub (CI/CD to Elastic Beanstalk).
 
 💡 Future Enhancements
