@@ -28,7 +28,7 @@ Workflow:
 | **Component**     | **Technology**                  | 
 |-------------------|---------------------------------|
 | **Frontend**      | HTML, CSS| 
-| **Backend** | Python (FastAPI in 'web_app.py') | 
+| **Backend** | Python (FastAPI in `web_app.py`) | 
 | **AI & Search** | Amazon Bedrock (Nova Pro, Titan Embeddings v2) | 
 | **Storage** | Amazon S3 (PDF storage) | 
 | **Deployment**      | AWS Elastic Beanstalk  | 
