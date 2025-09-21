@@ -31,7 +31,7 @@ Workflow:
 | **Backend** | Python | 
 | **AI & Search** | Amazon Bedrock (Nova Pro, Titan Embeddings v2) | 
 | **Storage:** | Amazon S3 (PDF storage) | 
-| **Deployment:**      | AWS Elastic Beanstalk  | 
+| **Deployment**      | AWS Elastic Beanstalk  | 
 
 🧑‍💻 Usage
 --------
@@ -43,3 +43,8 @@ Workflow:
 - The chatbot retrieves the relevant document sections and generates an answer.
 - Version Control: GitHub (CI/CD to Elastic Beanstalk).
 
+💡 Future Enhancements
+--------
+- Add multi-language support (Malay, Mandarin, Tamil).
+- Integrate voice-based query using Amazon Polly.
+- Expand to other domains (legal, finance, education).
