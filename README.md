@@ -12,7 +12,7 @@ An AI-powered chatbot interface that enables healthcare professionals to query u
 
 🏗️ System Architecture
 --------
-<img width="3284" height="2084" alt="image" src="https://github.com/user-attachments/assets/5bf5dee1-021b-427f-8245-3f9b9bbab192" />
+<img width="3280" height="2080" alt="image" src="https://github.com/user-attachments/assets/82028a8f-5d19-4546-8b31-3f1c539f8e18" />
 
 Workflow:
 1. User interacts via web app (HTML/CSS + API).
